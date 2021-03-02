@@ -9,7 +9,9 @@ const loader = (props) => {
       overlayColor="transparent"
       source={require('../images/animation/36706-loading.json')}
       animationStyle={styles.lottie}
-      speed={1}></AnimatedLoader>
+      speed={1}>
+        
+      </AnimatedLoader>
   );
 };
 const styles = StyleSheet.create({

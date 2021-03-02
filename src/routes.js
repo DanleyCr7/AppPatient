@@ -72,7 +72,7 @@ const SwitchNavigator = createSwitchNavigator(
     Home: TabBottom,
   },
   {
-    initialRouteName: 'Home',
+    initialRouteName: 'Login',
   },
 );
 export default function App() {

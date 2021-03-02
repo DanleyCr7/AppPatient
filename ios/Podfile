@@ -79,6 +79,8 @@ target 'MobileHans' do
 
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
 
+  pod 'react-native-alarm-notification', :path => '../node_modules/react-native-alarm-notification'
+
   target 'MobileHansTests' do
     inherit! :complete
     # Pods for testing

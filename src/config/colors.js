@@ -11,5 +11,5 @@ export const Colors = {
   SELECT: '#9157B9',
   NOTSELECT: '#F0F0F0',
   ROSE: '#FF2982',
-  BACKGROUNDALARM: '#533779'
+  BACKGROUNDALARM: '#533779',
 };

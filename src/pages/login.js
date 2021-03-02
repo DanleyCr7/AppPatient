@@ -29,13 +29,15 @@ export default class login extends Component {
     this.setState({isLoading: true});
     this.props.navigation.navigate('Home');
   }
+
   render() {
     const {cpf, senha, isLoading, visible} = this.state;
     return (
       <View style={styles.container}>
         <Image
           source={require('../images/medical.png')}
-          style={{width: 150, height: 100, marginBottom: 35}}
+          style={{width: '50%', height: 250, marginBottom: 35}}
+          resizeMode='contain'
         />
         <Input
           value={cpf}
