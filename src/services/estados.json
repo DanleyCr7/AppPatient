@@ -1,0 +1,119 @@
+[
+	{
+		"state": "ACRE",
+		"code": "AC"
+	},
+	{
+		"state": "ALAGOAS",
+		"code": "AL"
+	},
+	{
+		"state": "AMAZONAS",
+		"code": "AM"
+	},
+	{
+		"state": "AMAPÁ",
+		"code": "AP"
+	},
+	{
+		"state": "BAHIA",
+		"code": "BA"
+	},
+	{
+		"state": "CEARÁ",
+		"code": "CE"
+	},
+	{
+		"state": "CHINA",
+		"code": "CH"
+	},
+	{
+		"state": "DISTRITO FEDERAL",
+		"code": "DF"
+	},
+	{
+		"state": "ESPÍRITO SANTO",
+		"code": "ES"
+	},
+	{
+		"state": "EXTERIOR",
+		"code": "EX"
+	},
+	{
+		"state": "GOIÁS",
+		"code": "GO"
+	},
+	{
+		"state": "MARANHÃO",
+		"code": "MA"
+	},
+	{
+		"state": "MINAS GERAIS",
+		"code": "MG"
+	},
+	{
+		"state": "MATO GROSSO DO SUL",
+		"code": "MS"
+	},
+	{
+		"state": "MATO GROSSO",
+		"code": "MT"
+	},
+	{
+		"state": "PARÁ",
+		"code": "PA"
+	},
+	{
+		"state": "PARAÍBA",
+		"code": "PB"
+	},
+	{
+		"state": "PERNAMBUCO",
+		"code": "PE"
+	},
+	{
+		"state": "PIAUI",
+		"code": "PI"
+	},
+	{
+		"state": "PARANÁ",
+		"code": "PR"
+	},
+	{
+		"state": "RIO DE JANEIRO",
+		"code": "RJ"
+	},
+	{
+		"state": "RIO GRANDE DO NORTE",
+		"code": "RN"
+	},
+	{
+		"state": "RONDÔNIA",
+		"code": "RO"
+	},
+	{
+		"state": "RORAIMA",
+		"code": "RR"
+	},
+	{
+		"state": "RIO GRANDE DO SUL",
+		"code": "RS"
+	},
+	{
+		"state": "SANTA CATARINA",
+		"code": "SC"
+	},
+	{
+		"state": "SERGIPE",
+		"code": "SE"
+	},
+	{
+		"state": "SÃO PAULO",
+		"code": "SP"
+	},
+	{
+		"state": "TOCANTIS",
+		"code": "TO"
+	}
+
+]

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  ToastAndroid,
 } from 'react-native';
 import {Colors} from '../config/colors';
 import ReactNativeAN from 'react-native-alarm-notification';
@@ -20,6 +21,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 // import ModalAlarm from '../components/modalAlarm'
 import Modal from 'react-native-modal';
 import DatePicker from 'react-native-date-picker';
+import AlarmClock from 'react-native-alarm-clock';
 
 // const twoHoursBefore = new Date();
 const fireDate = '28-02-2021 18:30:00';
@@ -29,6 +31,8 @@ const alarmNotifData = {
   channel: 'my_channel_id',
   small_icon: 'ic_launcher',
   has_button: true,
+  schedule_type: 'repeat',
+  repeat_interval: 'daily',
   // You can add any additional data that is important for the notification
   // It will be added to the PendingIntent along with the rest of the bundle.
   // e.g.
@@ -45,21 +49,22 @@ export default class alarm extends Component {
       togle: false,
       index: new Animated.Value(0),
       tick: new Animated.Value(0),
-      hour: now.format('HH:mm:ss a'),
-      alarm: now.format('HH:mm:ss a'),
+      hour: now.format('HH:mm:ss'),
+      alarm: '00:00:00',
       isModal: false,
       date: new Date(),
-
     };
   }
   _timer = 0;
   _ticker = null;
   async componentDidMount() {
     const togle = await AsyncStorage.getItem('togle');
+    const alarm = await AsyncStorage.getItem('alarm');
+    // const now = moment().format(`DD-MM-YYYY `)
 
-    await this.setState({togle: JSON.parse(togle)});
+    await this.setState({togle: JSON.parse(togle), alarm: JSON.parse(alarm)});
 
-    // console.log(JSON.parse(togle))
+    // // console.log(JSON.parse(togle))
 
     const current = dayjs();
     const diff = current.endOf('day').diff(current, 'seconds');
@@ -69,21 +74,10 @@ export default class alarm extends Component {
     this._animate();
 
     this._ticker = setInterval(() => {
-      const now = moment();
       this._timer += 1;
       this.state.tick.setValue(this._timer);
       this.setState({hour: now.format('HH:mm:ss')});
     }, TICK_INTERVAL);
-
-    setInterval(async () => {
-      // const alarm = moment.format("DD-MM-YYYY")
-      togle
-        ? await ReactNativeAN.scheduleAlarm({
-            ...alarmNotifData,
-            fire_date: alarm,
-          })
-        : null;
-    }, 86400000);
   }
   componentWillUnmount() {
     clearInterval(this._ticker);
@@ -97,46 +91,100 @@ export default class alarm extends Component {
     }).start();
   }
   async clock() {
-    // try {
-    const {togle} = this.state;
-    console.log(!togle);
-    await this.setState({togle: !togle});
-    const now = moment();
-    const alarm = now.format(`DD-MM-YYYY ${this.state.alarm} a`);
-    // DD-MM-YYYY hh:mm:ss a
-    console.log(alarm);
-    // console.log(!togle)
+    try {
+      const {togle} = this.state;
 
-    if (!togle) {
-      const sound = await ReactNativeAN.scheduleAlarm({
-        ...alarmNotifData,
-        fire_date: alarm,
-      });
-      console.log(alarm);
-      console.log(sound);
-    } else {
-      ReactNativeAN.stopAlarmSound();
-      ReactNativeAN.removeAllFiredNotifications();
-      console.log('alarme desativado');
+      await this.setState({togle: !togle});
+
+      if (!togle) {
+        await this.alarmEnable();
+      } else {
+        await this.cancelAlarm();
+      }
+      await AsyncStorage.setItem('togle', JSON.stringify(!togle));
+
+    } catch (error) {
+      console.log(error);
     }
-    await AsyncStorage.setItem('togle', JSON.stringify(!togle));
-    //   // await AsyncStorage.setItem(
-    //   //   'alarm',
-    //   //   alarm
-    //   // );
-    // } catch (error) {
-
-    // }
   }
-  defineAlarm(){
-    const alarm = moment(this.state.date).format('HH:mm:ss a');
-    this.setState({isModal: !this.state.isModal, alarm: alarm});
-    console.log(alarm)
+  async alarmEnable() {
+    const {alarm} = this.state;
+    const hourActual = moment().format(`HH:mm`);
+
+    const beginningTime = moment(alarm, 'HH:mm');
+    const endTime = moment(hourActual, 'HH:mm');
+    const plusDay = moment().format(`DD-MM-YYYY ${this.state.alarm}`);
+    if (endTime.isBefore(beginningTime)) {
+      const alarmOne = await ReactNativeAN.scheduleAlarm({
+        ...alarmNotifData,
+        fire_date: moment().format(`DD-MM-YYYY ${alarm} a`),
+      });
+      await AsyncStorage.setItem('idAlarm', JSON.stringify(alarmOne.id));
+      console.log(alarmOne.id);
+      // console.log(moment().format(`DD-MM-YYYY ${alarm} a`))
+    } else {
+      const alarm2 = await ReactNativeAN.scheduleAlarm({
+        ...alarmNotifData,
+        fire_date: moment(plusDay, 'DD-MM-YYYY HH:mm:ss a')
+          .add(1, 'days')
+          .format('DD-MM-YYYY HH:mm:ss'),
+      });
+      await AsyncStorage.setItem('idAlarm', JSON.stringify(alarm2.id));
+      console.log(alarm2.id);
+
+      console.log(
+        moment(plusDay, 'DD-MM-YYYY HH:mm:ss a')
+          .add(1, 'days')
+          .format('DD-MM-YYYY HH:mm:ss'),
+      );
+    }
+    ToastAndroid.showWithGravity(
+      `Alarme ativado`,
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+    );
+  }
+  async cancelAlarm() {
+    const idAlarm = await AsyncStorage.getItem('idAlarm');
+    const id = JSON.parse(idAlarm);
+    console.log(id);
+
+    ReactNativeAN.deleteAlarm(id);
+    ReactNativeAN.deleteRepeatingAlarm(id);
+    await ReactNativeAN.stopAlarmSound();
+    await ReactNativeAN.removeAllFiredNotifications();
+    ToastAndroid.showWithGravity(
+      `Alarme desativado`,
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+    );
+  }
+  async defineAlarm() {
+    // const idAlarm = await AsyncStorage.getItem('idAlarm');
+    // const id = JSON.parse(idAlarm)
+    // console.log(id)
+
+    // ReactNativeAN.deleteAlarm(id)
+    // ReactNativeAN.deleteRepeatingAlarm(id);
+
+    const alarm = moment(this.state.date).format('HH:mm:ss');
+
+    await this.setState({isModal: !this.state.isModal, alarm: alarm});
+    await AsyncStorage.setItem('alarm', JSON.stringify(alarm));
+    ToastAndroid.showWithGravity(
+      `Alarme definido`,
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+    );
+
+    console.log(alarm);
   }
   isModal() {
     this.setState({isModal: !this.state.isModal});
   }
+  // showToastWithGravity(){
 
+  // };
   render() {
     const {index, isModal, date} = this.state;
     const interpoleted = {
@@ -172,8 +220,10 @@ export default class alarm extends Component {
             }}>
             <DatePicker
               date={date}
-              onDateChange={(date) => {this.setState({date: date})}}
-              mode="datetime"
+              onDateChange={(date) => {
+                this.setState({date: date});
+              }}
+              mode="time"
               style={{marginBottom: 30}}
               customStyles={{
                 dateText: {
@@ -190,10 +240,9 @@ export default class alarm extends Component {
                 justifyContent: 'space-between',
                 marginBottom: -50,
               }}>
-              <TouchableOpacity 
-              style={styles.alarmDefineButton}
-              onPress={()=>this.defineAlarm()}
-              >
+              <TouchableOpacity
+                style={styles.alarmDefineButton}
+                onPress={() => this.defineAlarm()}>
                 <Icon
                   name="check-circle-outline"
                   color={Colors.BACKGROUNDTAB}

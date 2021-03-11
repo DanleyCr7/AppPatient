@@ -10,9 +10,11 @@ import {
   Image,
   ActivityIndicator,
   Dimensions,
+  Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Moment from 'moment';
+import api from "../services/api";
 
 import {Colors} from '../config/colors';
 
@@ -25,7 +27,7 @@ export default class home extends Component {
     super(props);
     this.state = {
       selectMonth: 0,
-      visible: false,
+      visible: true,
       card: {
         expanded: false,
         date_end: Moment(date_take).add(26, 'days').format(),
@@ -257,14 +259,67 @@ export default class home extends Component {
           },
         ],
       },
+      data: [],
+      meses: [],
+      id_treatament: '',
+      type_treatament: '',
+      name_patient: ''
     };
   }
   componentDidMount() {
+    this.tryLogin()
     // setInterval(() => {
     //   this.setState({
     //     visible: !this.state.visible,
     //   });
     // }, 5000);
+  }
+
+  tryLogin() {
+    // const data = await AsyncStorage.setItem('togle', JSON.stringify(!togle));
+    fetch(`${api}/session`, {
+      method: "post",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: 'souza@gmail.com',
+        password: '1234',
+      }),
+    })
+      .then((response) => response.json())
+      .then(async (data) => {
+        // console.log(data)
+       await  this.searchPatient(data)
+       await this.setState({data: data})
+      });
+    // this.setState({isLoading: true});
+    // this.props.navigation.navigate('Home');
+  }
+  async searchPatient(data) {
+      await fetch(`${api}/search/patient`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Accept': 'application/json',
+          Authorization: data.authorization,
+          id: data.id,
+          permissions: data.permissions,
+        },
+        body: JSON.stringify({
+          cpf: '073.767.143-24',
+        }),
+      })
+        .then((response) => response.json())
+        .then(async(data) => {
+          console.log(data.patient.password)
+          await this.setState({ 
+            meses: data.diagnosis[0].treatments[0].treatment_[0].treatment_,
+            id_treatament: data.diagnosis[0].treatments[0]._id
+          });
+          this.setState({visible: false})
+        });
   }
   buildStyle(item, index) {
     const {x1Mobile, y1Mobile, compressed} = item;
@@ -294,23 +349,54 @@ export default class home extends Component {
     return style;
   }
   async takeCompress(item) {
-    // console.log(date_take)
-    let items = this.state.card;
-    const index = items.treatment_.indexOf(item);
-    items.treatment_[index].compressed =
-      item.compressed === 'branco' ? 'verde' : 'branco';
-    console.log(items);
-    await this.setState({card: items});
+    // console.log(item)
+     const { id_treatament, data, meses} = this.state
+    if(Moment(date_take).format('MM/DD/YYYY')===Moment(item.date_take).format('MM/DD/YYYY')){
+      if(item.compressed==="verde"){
+        alert('Você já tomou o remedio do dia.')
+      }else{
+      let items = meses;
+      const index = meses.length-1;
+      let index2 = items[index].treatment_.indexOf(item);
+      console.log(index, index2)
+      items[index].treatment_[index2].compressed =
+        item.compressed === "branco" ? "verde" : "branco";
+      await this.setState({ meses: items });
+      // let data = await JSON.parse(localStorage.getItem("@hans-app/login"));
+      await fetch(`${api}/treatment/${id_treatament}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: data.authorization,
+          id: data.id,
+          permissions: data.permissions,
+        },
+        body: JSON.stringify({
+          comments: '',
+          date_end: '',
+          date_init: '',
+          pqm: 'Paucibacilar adulto',
+          status_treatment: '',
+          treatment_: this.state.meses,
+          expanded: false,
+        }),
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      });
+    }
+    }else{
+      Alert.alert('Mensagem','Você só pode selecionar o comprimido do dia atual')
+    }
   }
 
   handleMonthSelect = (index) => {
     this.setState({selectMonth: index});
   };
-  componentDidMount() {
-    console.log('height=' + height + 'width=' + width);
-  }
+  
   render() {
-    const {visible, card} = this.state;
+    const {visible, card, meses} = this.state;
     if (visible) {
       return <Loader visible={true} />;
     } else {
@@ -394,22 +480,23 @@ export default class home extends Component {
                   width: '100%',
                   alignItems: 'center',
                   alignSelf: 'center',
-                  paddingLeft: '10%'
+                  paddingLeft: '8%'
                   // backgroundColor: '#000'
                 }}>
+                {/* {card.treatment_? */}
                 <FlatList
-                  data={card.treatment_}
+                  data={meses[meses.length-1].treatment_}
                   renderItem={({item, index}) => (
                     <TouchableOpacity
                       keyExtractor={(item) => item.id}
-                      onPress={() => this.takeCompress(item)}
+                      onPress={() => this.takeCompress(item, index)}
                       // style={this.buildStyle(obj, index)}
                       style={{
                         width: 30,
                         height: 30,
                         borderRadius: 150,
                         backgroundColor:
-                          card.treatment_[index].compressed === 'branco'
+                        meses[meses.length-1].treatment_[index].compressed === 'branco'
                             ? '#fff'
                             : '#85bd7a',
                         // marginHorizontal: '6%',

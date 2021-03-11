@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import api from "../services/api";
 
 // componentes
 import Input from '../components/input';
@@ -24,10 +26,57 @@ export default class login extends Component {
       visible: false,
     };
   }
+  componentDidMount() {
+    // this.tryLogin();
+  }
 
   tryLogin() {
+    // const data = await AsyncStorage.setItem('togle', JSON.stringify(!togle));
+    // fetch(`${api}/session`, {
+    //   method: "post",
+    //   headers: {
+    //     'Accept': 'application/json',
+    //     'Content-Type': 'application/json'
+    //   },
+    //   body: JSON.stringify({
+    //     email: 'souza@gmail.com',
+    //     password: '1234',
+    //   }),
+    // })
+    //   .then((response) => response.json())
+    //   .then(async (data) => {
+    //     console.log(data)
+    //     this.searchPatient(data)
+    //   });
     this.setState({isLoading: true});
     this.props.navigation.navigate('Home');
+  }
+  async searchPatient(data) {
+      await fetch(`${api}/search/patient`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Accept': 'application/json',
+          Authorization: data.authorization,
+          id: data.id,
+          permissions: data.permissions,
+        },
+        body: JSON.stringify({
+          cpf: '073.767.143-24',
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data)
+          // if (data.message) {
+          //   alert(data.message);
+          // } else {
+          //   // console.log(data["parsey_scale"]);
+          //   console.log(data)
+          // }
+        });
+  
+   
   }
 
   render() {
