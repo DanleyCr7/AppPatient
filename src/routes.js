@@ -11,6 +11,7 @@ import home from './pages/home';
 import login from './pages/login';
 import account from './pages/account';
 import alarm from './pages/alarm';
+import verifyLogin from './pages/verifyLogin';
 
 const Tab = createMaterialBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -53,7 +54,7 @@ function TabBottom() {
           ),
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Account"
         component={account}
         options={{
@@ -62,7 +63,7 @@ function TabBottom() {
             <Icon name="account" color={color} size={26} />
           ),
         }}
-      />
+      /> */}
     </Tab.Navigator>
   );
 }
@@ -70,9 +71,10 @@ const SwitchNavigator = createSwitchNavigator(
   {
     Login: login,
     Home: TabBottom,
+    VerifyLogin: verifyLogin
   },
   {
-    initialRouteName: 'Login',
+    initialRouteName: 'VerifyLogin',
   },
 );
 export default function App() {

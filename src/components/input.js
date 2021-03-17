@@ -11,6 +11,7 @@ const Input = (props) => {
         value={props.value}
         placeholder={props.textInput}
         placeholderTextColor={Colors.TEXTINPUT}
+        secureTextEntry={props.isPassword}
       />
       <Icon name={props.icon} color={Colors.ICON} size={18} />
     </View>

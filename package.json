@@ -29,6 +29,8 @@
     "react-native-animated-loader": "^0.0.9",
     "react-native-date-picker": "^3.2.10",
     "react-native-gesture-handler": "^1.7.0",
+    "react-native-mask-cpf-cnpj": "^2.0.3",
+    "react-native-masked-text": "^1.13.0",
     "react-native-modal": "^11.7.0",
     "react-native-paper": "^4.7.1",
     "react-native-push-notification": "^7.2.1",

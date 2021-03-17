@@ -6,13 +6,14 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-
+  Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import api from "../services/api";
-
+import api from '../services/api';
+import { TextInputMask } from "react-native-masked-text";
 // componentes
 import Input from '../components/input';
+import AsyncStorage from '@react-native-community/async-storage';
 
 import {Colors} from '../config/colors';
 
@@ -31,51 +32,33 @@ export default class login extends Component {
   }
 
   tryLogin() {
-    // const data = await AsyncStorage.setItem('togle', JSON.stringify(!togle));
-    // fetch(`${api}/session`, {
-    //   method: "post",
-    //   headers: {
-    //     'Accept': 'application/json',
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify({
-    //     email: 'souza@gmail.com',
-    //     password: '1234',
-    //   }),
-    // })
-    //   .then((response) => response.json())
-    //   .then(async (data) => {
-    //     console.log(data)
-    //     this.searchPatient(data)
-    //   });
-    this.setState({isLoading: true});
-    this.props.navigation.navigate('Home');
-  }
-  async searchPatient(data) {
-      await fetch(`${api}/search/patient`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          'Accept': 'application/json',
-          Authorization: data.authorization,
-          id: data.id,
-          permissions: data.permissions,
-        },
-        body: JSON.stringify({
-          cpf: '073.767.143-24',
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log(data)
-          // if (data.message) {
-          //   alert(data.message);
-          // } else {
-          //   // console.log(data["parsey_scale"]);
-          //   console.log(data)
-          // }
-        });
-  
+    const { cpf, senha } = this.state
+    this.setState({isLoading: true})
+    fetch(`${api}/verifyuser`, {
+      method: "post",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        cpf: cpf,
+        password: senha,
+      }),
+    })
+      .then((response) => response.json())
+      .then(async (data) => {
+        console.log(data)
+        if(data.success){
+        await AsyncStorage.setItem('cpf', cpf);
+        this.props.navigation.navigate('Home')
+        this.setState({isLoading: false})
+
+        } else{
+          Alert.alert('Falhar', 'Usuario ou senha incorretos')
+          this.setState({isLoading: false})
+        }
+        // console.log(data.message)
+      });
    
   }
 
@@ -85,20 +68,34 @@ export default class login extends Component {
       <View style={styles.container}>
         <Image
           source={require('../images/medical.png')}
-          style={{width: '50%', height: 250, marginBottom: 35}}
-          resizeMode='contain'
+          style={{width: '50%', height: 250, marginBottom: 25}}
+          resizeMode="contain"
         />
-        <Input
-          value={cpf}
-          onChangeText={(value) => this.setState({cpf: value})}
-          textInput="CPF"
-          icon="account"
+        <View style={styles.containerIput}>
+        <TextInputMask
+          type={'cpf'}
+          value={this.state.cpf}
+          onChangeText={text => {
+            this.setState({
+              cpf: text
+            })
+          }}
+          placeholder='CPF'
+          placeholderTextColor={Colors.TEXTINPUT}
+          style={{
+            width: '80%',
+            color: Colors.TEXTINPUT
+          }}
         />
+
+          <Icon name="account" color={Colors.ICON} size={18} />
+        </View>
         <Input
           value={senha}
           onChangeText={(value) => this.setState({senha: value})}
           textInput="Senha"
           icon="lock"
+          isPassword={true}
         />
         <View style={styles.contRow}>
           <Text style={styles.text}>Esqueceu sua senha?</Text>
@@ -146,4 +143,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  containerIput:{
+    flexDirection: 'row',
+    backgroundColor: Colors.BACKGROUNDINPUT,
+    width: '80%',
+    height: 40,
+    borderRadius: 5,
+    marginBottom: 30,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10
+   },
 });

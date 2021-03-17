@@ -8,6 +8,7 @@ import {
   Animated,
   Dimensions,
   ToastAndroid,
+  Alert,
 } from 'react-native';
 import {Colors} from '../config/colors';
 import ReactNativeAN from 'react-native-alarm-notification';
@@ -27,7 +28,7 @@ import AlarmClock from 'react-native-alarm-clock';
 const fireDate = '28-02-2021 18:30:00';
 const alarmNotifData = {
   title: 'Hora de tomar seu remédio',
-  message: 'Oi Bernada, não esqueça de tomar seu remedio ;)',
+  message: 'Oi, não esqueça de tomar seu remedio ;)',
   channel: 'my_channel_id',
   small_icon: 'ic_launcher',
   has_button: true,
@@ -60,7 +61,7 @@ export default class alarm extends Component {
   async componentDidMount() {
     const togle = await AsyncStorage.getItem('togle');
     const alarm = await AsyncStorage.getItem('alarm');
-    // const now = moment().format(`DD-MM-YYYY `)
+    // const now = moment()
 
     await this.setState({togle: JSON.parse(togle), alarm: JSON.parse(alarm)});
 
@@ -76,7 +77,7 @@ export default class alarm extends Component {
     this._ticker = setInterval(() => {
       this._timer += 1;
       this.state.tick.setValue(this._timer);
-      this.setState({hour: now.format('HH:mm:ss')});
+      this.setState({hour: moment().format('HH:mm:ss')});
     }, TICK_INTERVAL);
   }
   componentWillUnmount() {
@@ -92,17 +93,22 @@ export default class alarm extends Component {
   }
   async clock() {
     try {
-      const {togle} = this.state;
+      const {togle, alarm} = this.state;
+      if (alarm != null) {
+        await this.setState({togle: !togle});
 
-      await this.setState({togle: !togle});
-
-      if (!togle) {
-        await this.alarmEnable();
+        if (!togle) {
+          await this.alarmEnable();
+        } else {
+          await this.cancelAlarm();
+        }
+        await AsyncStorage.setItem('togle', JSON.stringify(!togle));
       } else {
-        await this.cancelAlarm();
+        Alert.alert(
+          'Lembrete',
+          'você precisa definir um horário para o lembrete',
+        );
       }
-      await AsyncStorage.setItem('togle', JSON.stringify(!togle));
-
     } catch (error) {
       console.log(error);
     }
@@ -147,7 +153,7 @@ export default class alarm extends Component {
   async cancelAlarm() {
     const idAlarm = await AsyncStorage.getItem('idAlarm');
     const id = JSON.parse(idAlarm);
-    console.log(id);
+    // console.log(id);
 
     ReactNativeAN.deleteAlarm(id);
     ReactNativeAN.deleteRepeatingAlarm(id);
@@ -160,13 +166,13 @@ export default class alarm extends Component {
     );
   }
   async defineAlarm() {
-    // const idAlarm = await AsyncStorage.getItem('idAlarm');
-    // const id = JSON.parse(idAlarm)
-    // console.log(id)
-
-    // ReactNativeAN.deleteAlarm(id)
-    // ReactNativeAN.deleteRepeatingAlarm(id);
-
+    const idAlarm = await AsyncStorage.getItem('idAlarm');
+    const id = JSON.parse(idAlarm);
+    console.log(id);
+    if (id != null) {
+      ReactNativeAN.deleteAlarm(id);
+      ReactNativeAN.deleteRepeatingAlarm(id);
+    }
     const alarm = moment(this.state.date).format('HH:mm:ss');
 
     await this.setState({isModal: !this.state.isModal, alarm: alarm});
@@ -186,7 +192,7 @@ export default class alarm extends Component {
 
   // };
   render() {
-    const {index, isModal, date} = this.state;
+    const {index, isModal, date, hour} = this.state;
     const interpoleted = {
       inputRange: [0, 360],
       outputRange: ['0deg', '360deg'],
@@ -275,7 +281,7 @@ export default class alarm extends Component {
             {/* <View style={[styles.smallQuadran]} /> */}
           </View>
 
-          <Text style={styles.textAlarm}>{this.state.hour}</Text>
+          <Text style={styles.textAlarm}>{hour}</Text>
         </View>
         {/* Animação do relogio */}
         <View style={styles.contListAlarms}>
