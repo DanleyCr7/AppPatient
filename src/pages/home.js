@@ -413,10 +413,16 @@ export default class home extends Component {
       }else{
       let items = meses;
       const index = meses.length-1;
-      let index2 = items[index].treatment_.indexOf(item);
+      const index2 = items[index].treatment_.indexOf(item);
       // console.log(index, index2)
-      items[index].treatment_[index2].compressed =
-        item.compressed === "branco" ? "take" : "branco";
+      if (item.compressed == "branco") {
+        items[index].treatment_[index2].compressed =
+        item.compressed == "branco" ? "take" : "branco";
+      }
+      if (item.compressed == "preto") {
+        items[index].treatment_[index2].compressed =
+        item.compressed == "preto" ? "take" : "preto";
+      }
       await this.setState({ meses: items });
       // let data = await JSON.parse(localStorage.getItem("@hans-app/login"));
       await fetch(`${api}/diagnosis/${treatament._id}`, {
@@ -457,11 +463,11 @@ export default class home extends Component {
       "Tem certeza que deseja sair?",
       [
         {
-          text: "Cancelar",
+          text: "Não",
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         },
-        { text: "OK", onPress: async() => {
+        { text: "Sim", onPress: async() => {
           await AsyncStorage.removeItem('cpf');
           this.props.navigation.navigate('Login')
         } }
@@ -476,7 +482,7 @@ export default class home extends Component {
       return <Loader visible={true} />;
     } else {
       return (
-        <ScrollView contentContainerStyle={{backgroundColor: '#fff'}}>
+        <ScrollView contentContainerStyle={{backgroundColor: '#F0F0F0',}}>
           <View style={styles.container}>
             <View style={styles.contPerfil}>
               <View style={styles.contPerfilDesc}>
@@ -592,7 +598,7 @@ export default class home extends Component {
               ? meses[meses.length-1].treatment_.map((item, index) => (
                   <TouchableOpacity
                     key={item.id}
-                    onPress={() => this.takeCompress(objt)}
+                    onPress={() => this.takeCompress(item)}
                     style={this.buildStyle(item)}>
 
                     </TouchableOpacity>
@@ -609,6 +615,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
     alignItems: 'center',
+    height: height
   },
   contPerfil: {
     flexDirection: 'row',
