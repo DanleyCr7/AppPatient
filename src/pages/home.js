@@ -20,6 +20,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import {Colors} from '../config/colors';
 
 import Loader from '../components/loader';
+import { SafeAreaView } from 'react-native-safe-area-context';
 const ageDifMs = Date.now();
 const date_take = Moment(ageDifMs).add(0, 'days').format();
 const {width, height} = Dimensions.get('screen');
@@ -266,12 +267,47 @@ export default class home extends Component {
       type_treatament: '',
       name_patient: '',
       patient: {},
+      treatament: {},
+      urlTake: ''
     };
   }
   async componentDidMount() {
-    this.auth()
+    await this.auth()
   }
-
+  async getTake(treatament) {
+    // const { treatament } = this.state;
+    // console.log(treatament)
+    
+    if (treatament.pqm == "Paucibacilar Adulto") {
+        fetch(`${api}/paucibalicar-adulto`)
+      .then((response) => response.json())
+      .then(async(data) => {
+        await  this.setState({urlTake: data.message, })
+        console.log(data)
+      });
+     
+    } else if (treatament.pqm == "Multibacilar Adulto") {
+       fetch(`${api}/multibacilar-adulto`)
+      .then((response) => response.json())
+      .then(async(data) => {
+        await this.setState({urlTake:data.message,})
+      });
+    } else if (treatament.pqm == "Paucibacilar Infantil") {
+       fetch(`${api}/paucibacilar-infantil`)
+      .then((response) => response.json())
+      .then(async(data) => {
+        await this.setState({urlTake:data.message, })
+      });
+    } else if (treatament.pqm == "Multibacilar Infantil") {
+      fetch(`${api}/multibacilar-infantil`)
+      .then((response) => response.json())
+      .then(async(data) => {
+        await this.setState({urlTake:data.message, })
+      });
+    }
+    // console.log(this,treatament.pqm)
+    
+  }
   auth() {
     // const data = await AsyncStorage.setItem('togle', JSON.stringify(!togle));
     fetch(`${api}/session`, {
@@ -311,59 +347,79 @@ export default class home extends Component {
       })
         .then((response) => response.json())
         .then(async(data) => {
-          console.log(data.diagnosis[0].treatments[0].treatment_[0].pqm)
+          if (data.diagnosis.length>0) {
+            const vetor = data.diagnosis.length - 1;
+            // console.log(data.diagnosis[vetor])
+            await this.setState({
+              meses: data.diagnosis[vetor].months,
+              treatament: data.diagnosis[vetor],
+            });
+            await this.getTake(this.state.treatament)
+          //  console.log(this.state.treatament)    
+          }
           await this.setState({ 
-            meses: data.diagnosis[0].treatments[0].treatment_[0].treatment_,
-            id_treatament: data.diagnosis[0].treatments[0]._id,
             patient: data.patient,
-            type_treatament: data.diagnosis[0].treatments[0].treatment_[0].pqm
           });
           this.setState({visible: false})
         });
   }
   buildStyle(item, index) {
-    const {x1Mobile, y1Mobile, compressed} = item;
+    const {
+      x1,
+      y1,
+      x2,
+      y2,
+      width,
+      height,
+      shape,
+      fill,
+      id,
+      radius,
+      compressed,
+    } = item;
     const style = {
       width: 0,
       height: 0,
-      left: x1Mobile,
-      top: y1Mobile,
-      position: 'absolute',
+      left: x1,
+      top: y1,
+      position: "absolute",
     };
-    if (compressed === 'verde') {
-      style.width = '10%';
-      style.height = '10%';
-      style.borderRadius = 22 / 2;
-      style.backgroundColor = '#85bd7a';
-      style.marginHorizontal = 8;
-      style.marginBottom = 10;
+    if (compressed === "take") {
+      style.width = radius;
+      style.height = radius;
+      style.borderRadius = radius / 2;
+      style.backgroundColor = "rgba(0,0,0,0.1)";
     }
-    if (compressed === 'branco') {
-      style.width = '10%';
-      style.height = '10%';
-      style.borderRadius = 22 / 2;
-      style.backgroundColor = '#ffff';
-      style.marginHorizontal = 8;
-      style.marginBottom = 10;
+    if (compressed === "branco") {
+      style.width = radius;
+      style.height = radius;
+      style.borderRadius = radius / 2;
+      style.backgroundColor = "#ffff";
+    }
+    if (compressed === "preto") {
+      style.width = radius;
+      style.height = radius;
+      style.borderRadius = radius / 2;
+      style.backgroundColor = "#291B0D";
     }
     return style;
   }
   async takeCompress(item) {
     console.log(item)
-     const { id_treatament, data, meses} = this.state
+     const { treatament, data, meses} = this.state
     if(Moment(date_take).format('MM/DD/YYYY')===Moment(item.date_take).format('MM/DD/YYYY')){
-      if(item.compressed==="verde"){
+      if(item.compressed==="take"){
         alert('Você já tomou o remedio do dia.')
       }else{
       let items = meses;
       const index = meses.length-1;
       let index2 = items[index].treatment_.indexOf(item);
-      console.log(index, index2)
+      // console.log(index, index2)
       items[index].treatment_[index2].compressed =
-        item.compressed === "branco" ? "verde" : "branco";
+        item.compressed === "branco" ? "take" : "branco";
       await this.setState({ meses: items });
       // let data = await JSON.parse(localStorage.getItem("@hans-app/login"));
-      await fetch(`${api}/treatment/${id_treatament}`, {
+      await fetch(`${api}/diagnosis/${treatament._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -372,13 +428,14 @@ export default class home extends Component {
           permissions: data.permissions,
         },
         body: JSON.stringify({
-          comments: '',
-          date_end: '',
-          date_init: '',
-          pqm: 'Paucibacilar adulto',
-          status_treatment: '',
-          treatment_: this.state.meses,
-          expanded: false,
+          comments: treatament.comments,
+            date_end: treatament.date_end,
+            date_init: treatament.date_init,
+            pqm: treatament.pqm,
+            status: treatament.status,
+            months: meses,
+            type: treatament.type,
+            expanded: false,
         }),
       })
       .then((response) => response.json())
@@ -412,15 +469,14 @@ export default class home extends Component {
       { cancelable: false }
     );
     
-
   }
   render() {
-    const {visible, card, meses, patient, type_treatament} = this.state;
+    const {visible, card, meses, patient, treatament, urlTake} = this.state;
     if (visible) {
       return <Loader visible={true} />;
     } else {
       return (
-        <ScrollView>
+        <ScrollView contentContainerStyle={{backgroundColor: '#fff'}}>
           <View style={styles.container}>
             <View style={styles.contPerfil}>
               <View style={styles.contPerfilDesc}>
@@ -438,7 +494,7 @@ export default class home extends Component {
                 /> */}
                 <View style={{marginLeft: 15,}}>
                   <Text style={styles.textName}>{patient.name}</Text>
-                  <Text style={styles.textProf}>{type_treatament}</Text>
+                  <Text style={styles.textProf}>{treatament.pqm}</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={()=>this.logout()}>
@@ -485,25 +541,26 @@ export default class home extends Component {
             />
           </View> */}
             <ImageBackground
-              source={require('../images/cartelas/paucibalarAdulto.png')}
+              source={{ uri: urlTake}}
               style={{
-                width: width - 20,
-                height: '100%',
+                width: treatament.pqm==="Paucibacilar Adulto"||treatament.pqm==="Paucibacilar Infantil" ? 310: 320,
+                height: treatament.pqm==="Paucibacilar Adulto"||treatament.pqm==="Paucibacilar Infantil"? 520: 370,
                 marginTop: -10,
                 alignItems: 'center',
                 paddingTop: '35%',
+                marginBottom: 15
               }}
-              resizeMode={'contain'}>
-              <View
+            >
+              {/* <View
                 style={{
                   width: '100%',
                   alignItems: 'center',
                   alignSelf: 'center',
                   paddingLeft: '8%'
                   // backgroundColor: '#000'
-                }}>
+                }}> */}
                 {/* {card.treatment_? */}
-                <FlatList
+                {/* <FlatList
                   data={meses[meses.length-1].treatment_}
                   renderItem={({item, index}) => (
                     <TouchableOpacity
@@ -514,10 +571,9 @@ export default class home extends Component {
                         width: 30,
                         height: 30,
                         borderRadius: 150,
-                        backgroundColor:
-                        meses[meses.length-1].treatment_[index].compressed === 'branco'
+                        backgroundColor:  item.compressed === 'branco'
                             ? '#fff'
-                            : '#85bd7a',
+                            : 'rgba(0,0,0,0.1)',
                         // marginHorizontal: '6%',
                         marginBottom: '10%',
                         marginLeft: '6%',
@@ -530,16 +586,18 @@ export default class home extends Component {
                   )}
                   numColumns={4}
                 />
-              </View>
+              </View> */}
 
-              {/* {card.treatment_
-              ? card.treatment_.map((objt, index) => (
+              {meses[meses.length-1].treatment_
+              ? meses[meses.length-1].treatment_.map((item, index) => (
                   <TouchableOpacity
-                    key={objt.id}
+                    key={item.id}
                     onPress={() => this.takeCompress(objt)}
-                    style={this.buildStyle(objt)}></TouchableOpacity>
+                    style={this.buildStyle(item)}>
+
+                    </TouchableOpacity>
                 ))
-              : null} */}
+              : null}
             </ImageBackground>
           </View>
         </ScrollView>
@@ -549,9 +607,8 @@ export default class home extends Component {
 }
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.CONTAINER,
+    backgroundColor: '#fff',
     alignItems: 'center',
-    flex: 1,
   },
   contPerfil: {
     flexDirection: 'row',

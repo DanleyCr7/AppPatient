@@ -30,7 +30,7 @@ export default class login extends Component {
   componentDidMount() {
     // this.tryLogin();
   }
-
+  
   tryLogin() {
     const { cpf, senha } = this.state
     this.setState({isLoading: true})
@@ -61,6 +61,53 @@ export default class login extends Component {
       });
    
   }
+  auth() {
+    this.setState({isLoading: true})
+    fetch(`${api}/session`, {
+      method: "post",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: 'souza@gmail.com',
+        password: '1234',
+      }),
+    })
+      .then((response) => response.json())
+      .then(async (data) => {
+        // console.log(data)
+       await this.verifyCpf(data)
+      });
+    // this.setState({isLoading: true});
+    // this.props.navigation.navigate('Home');
+  }
+  async verifyCpf(data){
+    const { cpf } = this.state
+    await fetch(`${api}/search/patient`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: data.authorization,
+        id: data.id,
+        permissions: data.permissions,
+      },
+      body: JSON.stringify({
+        cpf: cpf,
+      }),
+    })
+      .then((response) => response.json())
+      .then(async (data) => {
+        if(data.message){
+          Alert.alert('Aviso', data.message)
+          this.setState({isLoading: false})
+        }else{
+          await AsyncStorage.setItem('cpf', cpf);
+          this.props.navigation.navigate('Home')
+          this.setState({isLoading: false})
+        }
+      });
+  }
 
   render() {
     const {cpf, senha, isLoading, visible} = this.state;
@@ -68,7 +115,7 @@ export default class login extends Component {
       <View style={styles.container}>
         <Image
           source={require('../images/medical.png')}
-          style={{width: '50%', height: 250, marginBottom: 25}}
+          style={{width: '50%', height: 250, marginBottom: 10}}
           resizeMode="contain"
         />
         <View style={styles.containerIput}>
@@ -90,15 +137,6 @@ export default class login extends Component {
 
           <Icon name="account" color={Colors.ICON} size={18} />
         </View>
-        <Input
-          value={senha}
-          onChangeText={(value) => this.setState({senha: value})}
-          textInput="Senha"
-          icon="lock"
-          isPassword={true}
-        />
-        <View style={styles.contRow}>
-          <Text style={styles.text}>Esqueceu sua senha?</Text>
           {isLoading ? (
             <ActivityIndicator
               style={{marginRight: 20}}
@@ -108,11 +146,10 @@ export default class login extends Component {
           ) : (
             <TouchableOpacity
               style={styles.button}
-              onPress={() => this.tryLogin()}>
-              <Icon name="arrow-right" color="#fff" size={22} />
+              onPress={() => this.auth()}>
+              <Text style={{color: '#fff', fontSize: 16}}>Entrar</Text>
             </TouchableOpacity>
           )}
-        </View>
       </View>
     );
   }
@@ -136,9 +173,9 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   button: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: '80%',
+    height: 40,
+    borderRadius: 4,
     backgroundColor: Colors.BUTTON,
     alignItems: 'center',
     justifyContent: 'center',
