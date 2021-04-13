@@ -383,22 +383,24 @@ export default class home extends Component {
       left: x1,
       top: y1,
       position: "absolute",
+      alignItems: 'center',
+      justifyContent: 'center'
     };
     if (compressed === "take") {
-      style.width = radius;
-      style.height = radius;
+      style.width = 25;
+      style.height = 25;
       style.borderRadius = radius / 2;
       style.backgroundColor = "rgba(0,0,0,0.1)";
     }
     if (compressed === "branco") {
-      style.width = radius;
-      style.height = radius;
+      style.width = 25;
+      style.height = 25;
       style.borderRadius = radius / 2;
       style.backgroundColor = "#ffff";
     }
     if (compressed === "preto") {
-      style.width = radius;
-      style.height = radius;
+      style.width = 25;
+      style.height = 25;
       style.borderRadius = radius / 2;
       style.backgroundColor = "#291B0D";
     }
@@ -600,7 +602,10 @@ export default class home extends Component {
                     key={item.id}
                     onPress={() => this.takeCompress(item)}
                     style={this.buildStyle(item)}>
-
+                        <Text 
+                        style={{color: item.compressed=='preto'? '#fff': '#000'}}>
+                        {Moment(item.date_take).format('DD')}
+                        </Text>
                     </TouchableOpacity>
                 ))
               : null}
